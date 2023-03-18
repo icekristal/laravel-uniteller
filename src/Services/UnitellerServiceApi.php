@@ -2,6 +2,8 @@
 
 namespace Icekristal\LaravelUnitellerApi\Services;
 
+use Illuminate\Support\Facades\Http;
+
 class UnitellerServiceApi
 {
 
@@ -21,7 +23,10 @@ class UnitellerServiceApi
     public array $cashierInfo = [];
     public array $productsInfo = [];
     public array $paymentsInfo = [];
+    public $dateTimePayment = null;
 
+    public $objectPayment = null; //Order or Client...
+    public $urlReturn = null; //Order or Client...
 
     public int|float $totalSumma = 0;
 
@@ -37,6 +42,8 @@ class UnitellerServiceApi
         $this->lineAttr = config('services.uniteller.default_line_attr');
         $this->urlRegister = config('services.uniteller.url_register');
         $this->merchantInn = config('services.uniteller.inn_merchant');
+        $this->dateTimePayment = now()->format("Y-m-d H:i:s");
+        $this->urlReturn = config('services.uniteller.webhook_domain') ?? config('app.url') . "/" . config('services.uniteller.webhook_slug');
     }
 
     /**
@@ -145,5 +152,48 @@ class UnitellerServiceApi
     {
         $this->totalSumma = $totalSumma;
         return $this;
+    }
+
+    /**
+     * @return null
+     */
+    public function getObjectPayment()
+    {
+        return $this->objectPayment;
+    }
+
+    /**
+     * @param null $objectPayment
+     */
+    public function setObjectPayment($objectPayment): UnitellerServiceApi
+    {
+        $this->objectPayment = $objectPayment;
+        return $this;
+    }
+
+
+    /**
+     * Get url payment
+     * @return string
+     */
+    public function getPayUrl(): string
+    {
+        if (is_null($this->objectPayment)) abort(422, 'no set object payment');
+        $sendInfo['UPID'] = $this->shopId;
+        $sendInfo['ObjectType'] = get_class($this->objectPayment);
+        $sendInfo['ObjectId'] = $this->objectPayment->id;
+        $sendInfo['OrderLifeTime'] = $this->orderLifeTime;
+        $sendInfo['CurrentDate'] = $this->dateTimePayment;
+        $sendInfo['Subtotal_P'] = $this->getTotalSumma();
+        $sendInfo['Receipt'] = [];
+        $sendInfo['Signature'] = [];
+        $sendInfo['URL_RETURN'] = $this->urlReturn;
+        $sendInfo['URL_RETURN_OK'] = $this->urlReturn . "?success=1";
+        $sendInfo['URL_RETURN_NO'] = $this->urlReturn . "?success=0";
+
+        $resultAnswer = Http::post($this->urlRegister, $sendInfo)->json();
+        if ($resultAnswer) {
+            $infoAnswer = $resultAnswer->getBody();
+        }
     }
 }
