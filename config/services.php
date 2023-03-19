@@ -15,5 +15,6 @@ return [
         'default_tax_mode' => 2,
         'inn_merchant' => null,
         'url_register' => "https://fpay.uniteller.ru/v2/api/register",
+        'model_object' => null //Model Order::class
     ],
 ];

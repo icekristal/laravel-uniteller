@@ -28,6 +28,8 @@ class UnitellerServiceApi
     public $objectPayment = null; //Order or Client...
     public $urlReturn = null; //Order or Client...
 
+    public $answerUniteller = null;
+
     public int|float $totalSumma = 0;
 
     public function __construct()
@@ -57,7 +59,7 @@ class UnitellerServiceApi
     /**
      * @param array $customerInfo
      *
-     * example: ['phone' => '+79998887700', 'name' => 'Name', 'email' => 'test@test.com']
+     * example: ['phone' => '+79998887700', 'name' => 'Name', 'email' => 'test@test.com', 'id' => 11]
      *
      * @return UnitellerServiceApi
      */
@@ -174,14 +176,18 @@ class UnitellerServiceApi
 
     /**
      * Get url payment
-     * @return string
+     * @return string|null
      */
-    public function getPayUrl(): string
+    public function getPayUrl(): ?string
     {
         if (is_null($this->objectPayment)) abort(422, 'no set object payment');
+        return !is_null($this->answerUniteller) ? $this->answerUniteller['Link'] ?? null : null;
+    }
+
+    public function sendRequest(): void
+    {
         $sendInfo['UPID'] = $this->shopId;
-        $sendInfo['ObjectType'] = get_class($this->objectPayment);
-        $sendInfo['ObjectId'] = $this->objectPayment->id;
+        $sendInfo['OrderID'] = $this->objectPayment->id;
         $sendInfo['OrderLifeTime'] = $this->orderLifeTime;
         $sendInfo['CurrentDate'] = $this->dateTimePayment;
         $sendInfo['Subtotal_P'] = $this->getTotalSumma();
@@ -193,7 +199,7 @@ class UnitellerServiceApi
 
         $resultAnswer = Http::post($this->urlRegister, $sendInfo)->json();
         if ($resultAnswer) {
-            $infoAnswer = $resultAnswer->getBody();
+            $this->answerUniteller = $resultAnswer->getBody();
         }
     }
 }

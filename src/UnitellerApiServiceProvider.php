@@ -13,9 +13,25 @@ class UnitellerApiServiceProvider extends ServiceProvider
         $this->registerRoutes();
     }
 
+    public function boot()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishMigrations();
+        }
+    }
+
 
     protected function registerRoutes()
     {
         $this->loadRoutesFrom(__DIR__ . '/../routes/webhook_uniteller.php');
+    }
+
+    protected function publishMigrations(): void
+    {
+        if (!class_exists('CreateServiceUnitellerTable')) {
+            $this->publishes([
+                __DIR__ . '/../database/migrations/create_service_uniteller_table.php' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_service_uniteller_table.php'),
+            ], 'migrations');
+        }
     }
 }
