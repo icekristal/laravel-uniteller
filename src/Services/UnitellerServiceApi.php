@@ -2,6 +2,7 @@
 
 namespace Icekristal\LaravelUnitellerApi\Services;
 
+use Icekristal\LaravelUnitellerApi\Models\ServiceUniteller;
 use Illuminate\Support\Facades\Http;
 
 class UnitellerServiceApi
@@ -18,6 +19,9 @@ class UnitellerServiceApi
     public mixed $vat = -1;
     public mixed $payAttr = 4;
     public mixed $lineAttr = 4;
+    public mixed $orderId = null;
+
+    public bool $isSaveDataBase = false;
 
     public array $customerInfo = [];
     public array $cashierInfo = [];
@@ -45,6 +49,7 @@ class UnitellerServiceApi
         $this->urlRegister = config('services.uniteller.url_register');
         $this->merchantInn = config('services.uniteller.inn_merchant');
         $this->dateTimePayment = now()->format("Y-m-d H:i:s");
+        $this->isSaveDataBase = config('services.uniteller.is_save_database') ?? false;
         $this->urlReturn = config('services.uniteller.webhook_domain') ?? config('app.url') . "/" . config('services.uniteller.webhook_slug');
     }
 
@@ -173,6 +178,24 @@ class UnitellerServiceApi
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getOrderId(): mixed
+    {
+        return $this->orderId;
+    }
+
+    /**
+     * @param mixed $orderId
+     * @return UnitellerServiceApi
+     */
+    public function setOrderId(mixed $orderId): UnitellerServiceApi
+    {
+        $this->orderId = $orderId;
+        return $this;
+    }
+
 
     /**
      * Get url payment
@@ -187,7 +210,7 @@ class UnitellerServiceApi
     public function sendRequest(): void
     {
         $sendInfo['UPID'] = $this->shopId;
-        $sendInfo['OrderID'] = $this->objectPayment->id;
+        $sendInfo['OrderID'] = $this->getOrderId() ?? $this->objectPayment->id ?? null;
         $sendInfo['OrderLifeTime'] = $this->orderLifeTime;
         $sendInfo['CurrentDate'] = $this->dateTimePayment;
         $sendInfo['Subtotal_P'] = $this->getTotalSumma();
@@ -197,8 +220,25 @@ class UnitellerServiceApi
         $sendInfo['URL_RETURN_OK'] = $this->urlReturn . "?success=1";
         $sendInfo['URL_RETURN_NO'] = $this->urlReturn . "?success=0";
 
+        if ($this->isSaveDataBase) {
+            $serviceUniteller = ServiceUniteller::query()->updateOrCreate([
+                'order_id' => $sendInfo['OrderID']
+            ], [
+                'object_type' => get_class($this->objectPayment) ?? null,
+                'object_id' => $this->objectPayment->id ?? null,
+                'send_info' => $sendInfo,
+                'answer_info' => null,
+            ]);
+        }
+
         $resultAnswer = Http::post($this->urlRegister, $sendInfo)->json();
         if ($resultAnswer) {
+            if ($this->isSaveDataBase) {
+                $serviceUniteller->update([
+                    'answer_info' => $resultAnswer
+                ]);
+            }
+
             $this->answerUniteller = $resultAnswer->getBody();
         }
     }

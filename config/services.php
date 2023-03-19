@@ -3,6 +3,7 @@
 return [
     'uniteller' => [
         'is_enable' => env('UNITELLER_IS_ENABLE', false),
+        'is_save_database' => env('UNITELLER_IS_SAVE_DATABASE', false),
         'webhook_domain' => env('UNITELLER_WEBHOOK_DOMAIN', null),
         'webhook_slug' => env('UNITELLER_WEBHOOK_SLUG', null),
         'login' => env('UNITELLER_LOGIN', null),
