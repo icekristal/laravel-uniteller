@@ -15,6 +15,8 @@ return [
         'default_line_attr' => 4,
         'default_tax_mode' => 2,
         'inn_merchant' => null,
+        'is_enable_logs_webhook' => false,
+        'name_channel_logs_webhook' => 'default',
         'url_register' => "https://fpay.uniteller.ru/v2/api/register",
         'model_object' => null //Model Order::class
     ],

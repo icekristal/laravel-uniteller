@@ -16,6 +16,7 @@ class UnitellerServiceApi
     public mixed $taxMode = null;
     public mixed $urlRegister = "https://fpay.uniteller.ru/v2/api/register";
 
+    public ?ServiceUniteller $unitellerModel = null;
     public mixed $vat = -1;
     public mixed $payAttr = 4;
     public mixed $lineAttr = 4;
@@ -125,6 +126,7 @@ class UnitellerServiceApi
     public function setProductsInfo(array $productsInfo): UnitellerServiceApi
     {
         $returnProductInfo = [];
+        $totalSumma = 0;
         foreach ($productsInfo as $item) {
             $itemUpdate = $item;
 
@@ -136,10 +138,15 @@ class UnitellerServiceApi
             $itemUpdate['vat'] = $item['vat'] ?? $this->vat;
             $itemUpdate['payattr'] = $item['payattr'] ?? $this->payAttr;
             $itemUpdate['lineattr'] = $item['lineattr'] ?? $this->lineAttr;
-
+            $totalSumma += $itemUpdate['sum'];
             $returnProductInfo[] = $itemUpdate;
         }
         $this->productsInfo = $returnProductInfo;
+
+        if ($this->totalSumma <= 0) {
+            $this->setTotalSumma($totalSumma);
+        }
+
         return $this;
     }
 
@@ -193,7 +200,38 @@ class UnitellerServiceApi
     public function setOrderId(mixed $orderId): UnitellerServiceApi
     {
         $this->orderId = $orderId;
+        $this->unitellerModel = ServiceUniteller::query()->where('id', $orderId)->first();
         return $this;
+    }
+
+
+    private function generateReceipt(): string
+    {
+        $result['customer'] = $this->getCustomerInfo();
+        $result['cashier'] = $this->getCashierInfo();
+        $result['taxmode'] = $this->taxMode;
+        $result['lines'] = $this->getProductsInfo();
+        $result['payments'] = [
+            'kind' => 1, // 1 - bank card
+            'type' => 0, // type payment
+            'amount' => $this->getTotalSumma(),
+        ];
+        $result['total'] = $this->getTotalSumma();
+
+        return base64_encode(json_encode($result));
+    }
+
+
+    private function generateSignature(): string
+    {
+        return mb_strtoupper(
+            hash("sha256", $this->getOrderId()) .
+            "&" . hash("sha256", $this->shopId) .
+            "&" . hash("sha256", $this->orderLifeTime) .
+            "&" . hash("sha256", $this->dateTimePayment) .
+            "&" . hash("sha256", $this->generateReceipt()) .
+            "&" . hash("sha256", $this->password)
+        );
     }
 
 
@@ -207,8 +245,10 @@ class UnitellerServiceApi
         return !is_null($this->answerUniteller) ? $this->answerUniteller['Link'] ?? null : null;
     }
 
-    public function sendRequest(): void
+    public function sendRequest()
     {
+        $serviceUniteller = null;
+
         $sendInfo['UPID'] = $this->shopId;
         $sendInfo['OrderID'] = $this->getOrderId() ?? $this->objectPayment->id ?? null;
         $sendInfo['OrderLifeTime'] = $this->orderLifeTime;
@@ -233,13 +273,46 @@ class UnitellerServiceApi
 
         $resultAnswer = Http::post($this->urlRegister, $sendInfo)->json();
         if ($resultAnswer) {
-            if ($this->isSaveDataBase) {
+            if ($this->isSaveDataBase && !is_null($serviceUniteller)) {
                 $serviceUniteller->update([
                     'answer_info' => $resultAnswer
                 ]);
             }
-
             $this->answerUniteller = $resultAnswer->getBody();
+            return $this->answerUniteller;
+        }
+        return false;
+    }
+
+    private function generateWebHookSignature($statusText): string
+    {
+        return mb_strtoupper(md5($this->unitellerModel->order_id . $statusText . $this->password));
+    }
+
+    public function updateWebhook($data): void
+    {
+        $requestStatus = $data['Status'] ?? null;
+        $requestSignature = $data['Signature'] ?? null;
+        $isAccessSignature = $requestSignature == $this->generateWebHookSignature($requestStatus);
+
+        switch ($requestStatus) {
+            case 'waiting':
+                break;
+            case 'paid':
+            case 'authorized':
+                break;
+            case 'party canceled':
+            case 'canceled':
+                break;
+            default:
+                break;
+        }
+
+
+        if (!is_null($this->unitellerModel) && $this->isSaveDataBase) {
+            $this->unitellerModel->update([
+                'webhook_info' => $data
+            ]);
         }
     }
 }
