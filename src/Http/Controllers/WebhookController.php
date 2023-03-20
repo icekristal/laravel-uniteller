@@ -19,14 +19,7 @@ class WebhookController extends BaseController
             Log::channel(config('services.uniteller.name_channel_logs_webhook', 'default'))->info($request->all());
         }
 
-        $unitellerModel = ServiceUniteller::query()->updateOrCreate([
-            'order_id' => $request->get('Order_ID')
-        ], [
-            'webhook_info' => $request->all()
-        ]);
-
-        $unitellerFacade = Uniteller::setOrderId($request->get('Order_ID'))->updateWebhook($request->all());
-
-        return new Response([true], 200);
+        $uniteller = Uniteller::setOrderId($request->get('Order_ID'))->updateWebhook($request->all())->getFinishResult();
+        return new Response([$uniteller['is_success_completed'] ?? false], 200);
     }
 }

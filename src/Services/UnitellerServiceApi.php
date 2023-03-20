@@ -4,6 +4,7 @@ namespace Icekristal\LaravelUnitellerApi\Services;
 
 use Icekristal\LaravelUnitellerApi\Models\ServiceUniteller;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class UnitellerServiceApi
 {
@@ -289,30 +290,54 @@ class UnitellerServiceApi
         return mb_strtoupper(md5($this->unitellerModel->order_id . $statusText . $this->password));
     }
 
-    public function updateWebhook($data): void
+    public string|null $requestStatus = null;
+    public bool $isAccessSignature = false;
+
+    public function updateWebhook($data): UnitellerServiceApi
     {
-        $requestStatus = $data['Status'] ?? null;
+        $this->requestStatus = $data['Status'] ?? null;
         $requestSignature = $data['Signature'] ?? null;
-        $isAccessSignature = $requestSignature == $this->generateWebHookSignature($requestStatus);
-
-        switch ($requestStatus) {
-            case 'waiting':
-                break;
-            case 'paid':
-            case 'authorized':
-                break;
-            case 'party canceled':
-            case 'canceled':
-                break;
-            default:
-                break;
-        }
-
+        $mySignature = $this->generateWebHookSignature($this->requestStatus);
+        $this->isAccessSignature = $requestSignature == $mySignature;
+        $orderId = $data['Order_Id'] ?? 0;
+        $this->writeLog("Check signature order_id: {$orderId} || request: {$requestSignature} == my: {$mySignature}", $this->isAccessSignature);
 
         if (!is_null($this->unitellerModel) && $this->isSaveDataBase) {
             $this->unitellerModel->update([
-                'webhook_info' => $data
+                'status' => $this->requestStatus,
+                'webhook_info' => $data,
+                'is_success_completed' => $this->isAccessSignature,
+                'is_finish' => true,
             ]);
+        }
+        return $this;
+    }
+
+    public function getFinishResult(): ?array
+    {
+        if (!is_null($this->unitellerModel) && $this->isSaveDataBase && $this->unitellerModel->is_finish) {
+            return [
+                'status' => $this->unitellerModel->status,
+                'is_success_completed' => $this->unitellerModel->is_success_completed,
+            ];
+        }
+
+        return [
+            'status' => $this->requestStatus,
+            'is_success_completed' => $this->isAccessSignature,
+        ];
+    }
+
+
+    private function writeLog($text, bool $isInfo = true): void
+    {
+        if (config('services.uniteller.is_enable_logs_webhook')) {
+            $log = Log::channel(config('services.uniteller.name_channel_logs_webhook', 'default'));
+            if ($isInfo) {
+                $log->info($text);
+            } else {
+                $log->warning($text);
+            }
         }
     }
 }

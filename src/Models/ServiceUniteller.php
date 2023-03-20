@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property integer $object_id
  * @property string $created_at
  * @property string $updated_at
+ * @property string $status
  * @property object $send_info
  * @property object $answer_info
  * @property object $webhook_info
@@ -29,7 +30,7 @@ class ServiceUniteller extends Model
 
 
     protected $fillable = [
-        'object_type', 'object_id', 'send_info', 'answer_info', 'webhook_info', 'order_id', 'is_finish', 'is_success_completed'
+        'object_type', 'object_id', 'send_info', 'answer_info', 'webhook_info', 'order_id', 'is_finish', 'status', 'is_success_completed'
     ];
 
     /**
