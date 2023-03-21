@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 trait InteractsUnitellerService
 {
-
     /**
      *  last row uniteller order
      * @return MorphOne
@@ -24,7 +23,6 @@ trait InteractsUnitellerService
      */
     public function unitellerOrders(): MorphMany
     {
-
         return $this->setConnection(config('services.uniteller.db_connection') ?? env('DB_CONNECTION'))->morphMany(ServiceUniteller::class, 'object');
     }
 }

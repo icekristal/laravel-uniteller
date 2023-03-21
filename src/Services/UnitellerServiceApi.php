@@ -156,7 +156,7 @@ class UnitellerServiceApi
      */
     public function getTotalSumma(): float|int
     {
-        return $this->totalSumma;
+        return number_format ($this->totalSumma, 2, '.', '');
     }
 
     /**
