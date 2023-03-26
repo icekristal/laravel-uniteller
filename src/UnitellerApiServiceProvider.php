@@ -30,7 +30,7 @@ class UnitellerApiServiceProvider extends ServiceProvider
     {
         if (!class_exists('CreateServiceUnitellerTable')) {
             $this->publishes([
-                __DIR__ . '/../database/migrations/create_service_uniteller_table.php' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_service_uniteller_table.php'),
+                __DIR__ . '/../database/migrations/create_service_uniteller_table.php.stub' => database_path('migrations/' . date('Y_m_d_His', time()) . '_create_service_uniteller_table.php'),
             ], 'migrations');
         }
     }
