@@ -284,7 +284,7 @@ class UnitellerServiceApi
                     'answer_info' => $resultAnswer
                 ]);
             }
-            $this->answerUniteller = $resultAnswer->getBody();
+            $this->answerUniteller = $resultAnswer;
             return $this->answerUniteller;
         }
         return false;
