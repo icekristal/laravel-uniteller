@@ -33,6 +33,8 @@ class UnitellerServiceApi
 
     public $objectPayment = null; //Order or Client...
     public $urlReturn = null; //Order or Client...
+    public $urlReturnOk = null; //Order or Client...
+    public $urlReturnNo = null; //Order or Client...
 
     public $answerUniteller = null;
 
@@ -52,7 +54,9 @@ class UnitellerServiceApi
         $this->merchantInn = config('services.uniteller.inn_merchant');
         $this->dateTimePayment = now()->format("Y-m-d H:i:s");
         $this->isSaveDataBase = config('services.uniteller.is_save_database') ?? false;
-        $this->urlReturn = config('services.uniteller.webhook_domain') ?? config('app.url') . "/" . config('services.uniteller.webhook_slug');
+        $this->urlReturn = config('services.uniteller.url_return');
+        $this->urlReturnOk = config('services.uniteller.url_return_ok');
+        $this->urlReturnNo = config('services.uniteller.url_return_no');
     }
 
     /**

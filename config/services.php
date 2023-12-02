@@ -19,6 +19,9 @@ return [
         'db_connection' => env('DB_CONNECTION', 'mysql'),
         'name_channel_logs_webhook' => 'default',
         'url_register' => "https://fpay.uniteller.ru/v2/api/register",
-        'model_object' => null //Model Order::class
+        'model_object' => null, //Model Order::class
+        'url_return' => env('UNITELLER_URL_RETURN'),
+        'url_return_ok' => env('UNITELLER_URL_RETURN_OK'),
+        'url_return_no' => env('UNITELLER_URL_RETURN_NO'),
     ],
 ];
