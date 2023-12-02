@@ -214,9 +214,11 @@ class UnitellerServiceApi
         $result['taxmode'] = $this->taxMode;
         $result['lines'] = $this->getProductsInfo();
         $result['payments'] = [
-            'kind' => 1, // 1 - bank card
-            'type' => 0, // type payment
-            'amount' => $this->getTotalSumma(),
+            [
+                'kind' => 1, // 1 - bank card
+                'type' => 0, // type payment
+                'amount' => $this->getTotalSumma(),
+            ]
         ];
         $result['total'] = $this->getTotalSumma();
 
@@ -226,7 +228,7 @@ class UnitellerServiceApi
 
     private function generateSignature(): string
     {
-        return strtoupper(
+        return mb_strtoupper(
             hash("sha256",
                 hash("sha256", $this->getOrderId()) .
                 "&" . hash("sha256", $this->shopId) .
