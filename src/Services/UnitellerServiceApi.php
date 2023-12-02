@@ -156,7 +156,7 @@ class UnitellerServiceApi
      */
     public function getTotalSumma(): float|int
     {
-        return number_format ($this->totalSumma, 2, '.', '');
+        return number_format($this->totalSumma, 2, '.', '');
     }
 
     /**
@@ -183,6 +183,7 @@ class UnitellerServiceApi
     public function setObjectPayment($objectPayment): UnitellerServiceApi
     {
         $this->objectPayment = $objectPayment;
+        $this->setOrderId($objectPayment?->id ?? null);
         return $this;
     }
 
@@ -225,13 +226,15 @@ class UnitellerServiceApi
 
     private function generateSignature(): string
     {
-        return mb_strtoupper(
-            hash("sha256", $this->getOrderId()) .
-            "&" . hash("sha256", $this->shopId) .
-            "&" . hash("sha256", $this->orderLifeTime) .
-            "&" . hash("sha256", $this->dateTimePayment) .
-            "&" . hash("sha256", $this->generateReceipt()) .
-            "&" . hash("sha256", $this->password)
+        return strtoupper(
+            hash("sha256",
+                hash("sha256", $this->getOrderId()) .
+                "&" . hash("sha256", $this->shopId) .
+                "&" . hash("sha256", $this->orderLifeTime) .
+                "&" . hash("sha256", $this->dateTimePayment) .
+                "&" . hash("sha256", $this->generateReceipt()) .
+                "&" . hash("sha256", $this->password))
+
         );
     }
 
