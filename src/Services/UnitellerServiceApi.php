@@ -258,8 +258,8 @@ class UnitellerServiceApi
         $sendInfo['OrderLifeTime'] = $this->orderLifeTime;
         $sendInfo['CurrentDate'] = $this->dateTimePayment;
         $sendInfo['Subtotal_P'] = $this->getTotalSumma();
-        $sendInfo['Receipt'] = [];
-        $sendInfo['Signature'] = [];
+        $sendInfo['Receipt'] = $this->generateReceipt();
+        $sendInfo['Signature'] = $this->generateSignature();
         $sendInfo['URL_RETURN'] = $this->urlReturn;
         $sendInfo['URL_RETURN_OK'] = $this->urlReturn . "?success=1";
         $sendInfo['URL_RETURN_NO'] = $this->urlReturn . "?success=0";
