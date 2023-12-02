@@ -2,6 +2,7 @@
 
 namespace Icekristal\LaravelUnitellerApi\Services;
 
+use GuzzleHttp\Client;
 use Icekristal\LaravelUnitellerApi\Models\ServiceUniteller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -281,14 +282,16 @@ class UnitellerServiceApi
             ]);
         }
 
-        $resultAnswer = Http::post($this->urlRegister, $sendInfo)->json();
-        if ($resultAnswer) {
+        $client = new Client();
+        $resultAnswer = $client->request('POST', $this->urlRegister, ['form_params' => $sendInfo]);
+        if ($resultAnswer->getStatusCode() == 200) {
+            $body = (array)json_decode($resultAnswer->getBody()->getContents());
             if ($this->isSaveDataBase && !is_null($serviceUniteller)) {
                 $serviceUniteller->update([
-                    'answer_info' => $resultAnswer
+                    'answer_info' => $body
                 ]);
             }
-            $this->answerUniteller = $resultAnswer;
+            $this->answerUniteller = $body;
             return $this->answerUniteller;
         }
         return false;
