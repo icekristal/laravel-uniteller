@@ -207,7 +207,7 @@ class UnitellerServiceApi
     public function setOrderId(mixed $orderId): UnitellerServiceApi
     {
         $this->orderId = $orderId;
-        $this->unitellerModel = ServiceUniteller::query()->where('id', $orderId)->first();
+        $this->unitellerModel = ServiceUniteller::query()->where('order_id', $orderId)->first();
         return $this;
     }
 
