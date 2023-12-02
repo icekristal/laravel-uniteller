@@ -20,6 +20,6 @@ class WebhookController extends BaseController
         }
 
         $uniteller = Uniteller::setOrderId($request->get('Order_ID'))->updateWebhook($request->all())->getFinishResult();
-        return new Response([$uniteller['is_success_completed'] ?? false], 200);
+        return new Response($uniteller['is_success_completed'] ?? false, 200);
     }
 }
