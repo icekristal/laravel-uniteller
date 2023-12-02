@@ -48,7 +48,7 @@ class UnitellerServiceApi
         $this->shopId = config('services.uniteller.shop_id');
         $this->orderLifeTime = config('services.uniteller.default_order_life_time');
         $this->taxMode = config('services.uniteller.default_tax_mode');
-        $this->vat = config('services.uniteller.default_tax_mode');
+        $this->vat = config('services.uniteller.default_vat');
         $this->payAttr = config('services.uniteller.default_pay_attr');
         $this->lineAttr = config('services.uniteller.default_line_attr');
         $this->urlRegister = config('services.uniteller.url_register');
