@@ -4,6 +4,8 @@ namespace Icekristal\LaravelUnitellerApi\Services;
 
 use GuzzleHttp\Client;
 use Icekristal\LaravelUnitellerApi\Models\ServiceUniteller;
+use Illuminate\Config\Repository;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -268,8 +270,8 @@ class UnitellerServiceApi
         $sendInfo['Receipt'] = $this->generateReceipt();
         $sendInfo['Signature'] = $this->generateSignature();
         $sendInfo['URL_RETURN'] = $this->urlReturn;
-        $sendInfo['URL_RETURN_OK'] = $this->urlReturn . "?success=1";
-        $sendInfo['URL_RETURN_NO'] = $this->urlReturn . "?success=0";
+        $sendInfo['URL_RETURN_OK'] = $this->urlReturnOk . "?success=1";
+        $sendInfo['URL_RETURN_NO'] = $this->urlReturnNo . "?success=0";
 
         if ($this->isSaveDataBase) {
             $serviceUniteller = ServiceUniteller::query()->updateOrCreate([
@@ -351,5 +353,25 @@ class UnitellerServiceApi
                 $log->warning($text);
             }
         }
+    }
+
+    /**
+     * @param Repository|Application|mixed|null $urlReturnOk
+     * @return UnitellerServiceApi
+     */
+    public function setUrlReturnOk(mixed $urlReturnOk): UnitellerServiceApi
+    {
+        $this->urlReturnOk = $urlReturnOk;
+        return $this;
+    }
+
+    /**
+     * @param Repository|Application|mixed|null $urlReturnNo
+     * @return UnitellerServiceApi
+     */
+    public function setUrlReturnNo(mixed $urlReturnNo): UnitellerServiceApi
+    {
+        $this->urlReturnNo = $urlReturnNo;
+        return $this;
     }
 }
